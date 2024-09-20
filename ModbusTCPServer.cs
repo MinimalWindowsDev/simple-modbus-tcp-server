@@ -10,6 +10,12 @@ class ModbusTCPServer
     private ushort[] holdingRegisters = new ushort[100];
     private Random random = new Random();
 
+    // Conveyor belt simulation variables
+    private bool conveyorRunning = false;
+    private ushort conveyorSpeed = 0;
+    private ushort itemCount = 0;
+    private bool emergencyStop = false;
+
     public ModbusTCPServer(int port)
     {
         tcpListener = new TcpListener(IPAddress.Any, port);
@@ -18,18 +24,21 @@ class ModbusTCPServer
 
     private void InitializeRegisters()
     {
-        // Simulate some initial values
-        holdingRegisters[0] = 2500; // Temperature sensor 1 (25.00 C)
-        holdingRegisters[1] = 2200; // Temperature sensor 2 (22.00 C)
-        holdingRegisters[2] = 1; // Control flag 1
-        holdingRegisters[3] = 0; // Control flag 2
+        // Register 0: Conveyor Status (0 = Stopped, 1 = Running)
+        holdingRegisters[0] = 0;
+        // Register 1: Conveyor Speed (0-100%)
+        holdingRegisters[1] = 0;
+        // Register 2: Item Count
+        holdingRegisters[2] = 0;
+        // Register 3: Emergency Stop (0 = Normal, 1 = Emergency Stop)
+        holdingRegisters[3] = 0;
     }
 
     public void Start()
     {
         isRunning = true;
         tcpListener.Start();
-        Console.WriteLine("Modbus TCP Server started on port {0}", ((IPEndPoint)tcpListener.LocalEndpoint).Port);
+        Console.WriteLine("Industrial Modbus TCP Server started on port {0}", ((IPEndPoint)tcpListener.LocalEndpoint).Port);
 
         while (isRunning)
         {
@@ -122,6 +131,34 @@ class ModbusTCPServer
 
         holdingRegisters[address] = value;
 
+        // Process the write based on the register
+        switch (address)
+        {
+            case 0: // Conveyor Status
+                conveyorRunning = value != 0;
+                Console.WriteLine("Conveyor is now " + (conveyorRunning ? "running" : "stopped"));
+                break;
+            case 1: // Conveyor Speed
+                conveyorSpeed = value;
+                Console.WriteLine("Conveyor speed set to " + conveyorSpeed + "%");
+                break;
+            case 3: // Emergency Stop
+                emergencyStop = value != 0;
+                if (emergencyStop)
+                {
+                    conveyorRunning = false;
+                    conveyorSpeed = 0;
+                    holdingRegisters[0] = 0; // Update conveyor status
+                    holdingRegisters[1] = 0; // Update conveyor speed
+                    Console.WriteLine("Emergency stop activated!");
+                }
+                else
+                {
+                    Console.WriteLine("Emergency stop deactivated");
+                }
+                break;
+        }
+
         byte[] response = new byte[12];
         Array.Copy(request, response, 12); // Echo the request for a write response
 
@@ -146,30 +183,29 @@ class ModbusTCPServer
         return response;
     }
 
-    public void SimulateDataChanges()
+    public void SimulateConveyorBelt()
     {
         while (isRunning)
         {
-            // Simulate temperature changes
-            holdingRegisters[0] = (ushort)(2500 + random.Next(-100, 101)); // +/- 1.00 C
-            holdingRegisters[1] = (ushort)(2200 + random.Next(-100, 101)); // +/- 1.00 C
-
-            // Simulate control flag changes
-            if (random.Next(10) == 0) // 10% chance to flip a flag
+            if (conveyorRunning && !emergencyStop)
             {
-                int flagIndex = random.Next(2) + 2; // Choose between register 2 and 3
-                holdingRegisters[flagIndex] = (ushort)(1 - holdingRegisters[flagIndex]); // Flip 0 to 1 or 1 to 0
-                Console.WriteLine("Control flag {0} changed to {1}", flagIndex - 1, holdingRegisters[flagIndex]);
+                // Simulate item movement
+                if (random.Next(100) < conveyorSpeed)
+                {
+                    itemCount++;
+                    holdingRegisters[2] = itemCount;
+                    Console.WriteLine("Item passed through. Total count: " + itemCount);
+                }
             }
 
-            Thread.Sleep(5000); // Wait for 5 seconds before next update
+            Thread.Sleep(100); // Update every 100ms
         }
     }
 
     static void Main(string[] args)
     {
         ModbusTCPServer server = new ModbusTCPServer(502);
-        Thread simulationThread = new Thread(server.SimulateDataChanges);
+        Thread simulationThread = new Thread(server.SimulateConveyorBelt);
         simulationThread.Start();
         server.Start();
     }

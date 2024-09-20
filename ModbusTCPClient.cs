@@ -102,36 +102,49 @@ class ModbusTCPClient
         {
             try
             {
-                // Read temperature sensors
-                ushort[] temperatures = client.ReadHoldingRegisters(1, 0, 2);
-                Console.WriteLine("Temperature Sensor 1: {0:F2} C", temperatures[0] / 100.0);
-                Console.WriteLine("Temperature Sensor 2: {0:F2} C", temperatures[1] / 100.0);
+                // Read conveyor status, speed, item count, and emergency stop status
+                ushort[] data = client.ReadHoldingRegisters(1, 0, 4);
+                Console.WriteLine("Conveyor Status: " + (data[0] == 0 ? "Stopped" : "Running"));
+                Console.WriteLine("Conveyor Speed: " + data[1] + "%");
+                Console.WriteLine("Item Count: " + data[2]);
+                Console.WriteLine("Emergency Stop: " + (data[3] == 0 ? "Inactive" : "Active"));
 
-                // Read control flags
-                ushort[] flags = client.ReadHoldingRegisters(1, 2, 2);
-                Console.WriteLine("Control Flag 1: {0}", flags[0]);
-                Console.WriteLine("Control Flag 2: {0}", flags[1]);
+                Console.WriteLine("\nChoose an action:");
+                Console.WriteLine("1. Start/Stop Conveyor");
+                Console.WriteLine("2. Set Conveyor Speed");
+                Console.WriteLine("3. Activate/Deactivate Emergency Stop");
+                Console.WriteLine("4. Exit");
 
-                // Write to a control flag
-                Console.Write("Do you want to change a control flag? (y/n): ");
-                if (Console.ReadLine().ToLower() == "y")
+                string choice = Console.ReadLine();
+
+                switch (choice)
                 {
-                    Console.Write("Enter flag number (1 or 2): ");
-                    int flagNumber = int.Parse(Console.ReadLine());
-                    Console.Write("Enter new value (0 or 1): ");
-                    ushort newValue = ushort.Parse(Console.ReadLine());
-                    client.WriteSingleRegister(1, (ushort)(flagNumber + 1), newValue);
+                    case "1":
+                        client.WriteSingleRegister(1, 0, (ushort)(data[0] == 0 ? 1 : 0));
+                        break;
+                    case "2":
+                        Console.Write("Enter new speed (0-100): ");
+                        ushort speed = ushort.Parse(Console.ReadLine());
+                        client.WriteSingleRegister(1, 1, speed);
+                        break;
+                    case "3":
+                        client.WriteSingleRegister(1, 3, (ushort)(data[3] == 0 ? 1 : 0));
+                        break;
+                    case "4":
+                        return;
+                    default:
+                        Console.WriteLine("Invalid choice. Please try again.");
+                        break;
                 }
 
-                Console.WriteLine("Waiting for 5 seconds before next read...");
-                Thread.Sleep(5000);
+                Console.WriteLine();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error: {0}", ex.Message);
             }
 
-            Console.WriteLine();
+            Thread.Sleep(1000); // Wait for 1 second before next iteration
         }
     }
 }
