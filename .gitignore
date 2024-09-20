@@ -378,4 +378,4 @@ FodyWeavers.xsd
 .idea/
 *.sln.iml
 
-build\
+build/
