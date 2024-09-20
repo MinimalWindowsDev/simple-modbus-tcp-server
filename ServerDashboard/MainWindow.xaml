@@ -1,0 +1,74 @@
+<Window x:Class="ServerDashboard.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        Title="Conveyor Belt Dashboard"
+                Height="450"
+                Width="800">
+        <Grid>
+                <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Row="0"
+                                Grid.ColumnSpan="2"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center">
+                        <TextBlock Text="Conveyor Status: "
+                                        VerticalAlignment="Center"/>
+                        <Ellipse x:Name="ConveyorStatus"
+                                        Width="20"
+                                        Height="20"
+                                        Fill="Red"
+                                        Margin="5"/>
+                        <TextBlock Text="Speed: "
+                                        VerticalAlignment="Center"
+                                        Margin="10,0,0,0"/>
+                        <TextBlock x:Name="SpeedValue"
+                                        Text="0"
+                                        VerticalAlignment="Center"/>
+                        <TextBlock Text="Item Count: "
+                                        VerticalAlignment="Center"
+                                        Margin="10,0,0,0"/>
+                        <TextBlock x:Name="ItemCountValue"
+                                        Text="0"
+                                        VerticalAlignment="Center"/>
+                        <TextBlock Text="Emergency Stop: "
+                                        VerticalAlignment="Center"
+                                        Margin="10,0,0,0"/>
+                        <Ellipse x:Name="EmergencyStopStatus"
+                                        Width="20"
+                                        Height="20"
+                                        Fill="Green"
+                                        Margin="5"/>
+                </StackPanel>
+
+                <lvc:CartesianChart Grid.Row="1"
+                                Grid.Column="0"
+                                x:Name="SpeedChart"
+                                LegendLocation="Right"
+                                Margin="10">
+                        <lvc:CartesianChart.AxisY>
+                                <lvc:Axis Title="Speed (%)"
+                                                MinValue="0"
+                                                MaxValue="100"/>
+                        </lvc:CartesianChart.AxisY>
+                </lvc:CartesianChart>
+
+                <lvc:CartesianChart Grid.Row="1"
+                                Grid.Column="1"
+                                x:Name="ItemCountChart"
+                                LegendLocation="Right"
+                                Margin="10">
+                        <lvc:CartesianChart.AxisY>
+                                <lvc:Axis Title="Item Count"
+                                                MinValue="0"/>
+                        </lvc:CartesianChart.AxisY>
+                </lvc:CartesianChart>
+        </Grid>
+</Window>

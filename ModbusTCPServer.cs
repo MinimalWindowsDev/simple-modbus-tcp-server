@@ -2,13 +2,16 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Collections.Concurrent;
 
 class ModbusTCPServer
 {
     private TcpListener tcpListener;
+    private TcpListener dashboardListener;
     private bool isRunning = false;
     private ushort[] holdingRegisters = new ushort[100];
     private Random random = new Random();
+    private ConcurrentBag<TcpClient> dashboardClients = new ConcurrentBag<TcpClient>();
 
     // Conveyor belt simulation variables
     private bool conveyorRunning = false;
@@ -16,9 +19,10 @@ class ModbusTCPServer
     private ushort itemCount = 0;
     private bool emergencyStop = false;
 
-    public ModbusTCPServer(int port)
+    public ModbusTCPServer(int port, int dashboardPort)
     {
         tcpListener = new TcpListener(IPAddress.Any, port);
+        dashboardListener = new TcpListener(IPAddress.Any, dashboardPort);
         InitializeRegisters();
     }
 
@@ -38,8 +42,27 @@ class ModbusTCPServer
     {
         isRunning = true;
         tcpListener.Start();
+        dashboardListener.Start();
         Console.WriteLine("Industrial Modbus TCP Server started on port {0}", ((IPEndPoint)tcpListener.LocalEndpoint).Port);
+        Console.WriteLine("Dashboard server started on port {0}", ((IPEndPoint)dashboardListener.LocalEndpoint).Port);
 
+        Thread clientThread = new Thread(HandleClients);
+        clientThread.Start();
+
+        Thread dashboardThread = new Thread(HandleDashboardClients);
+        dashboardThread.Start();
+
+        Thread simulationThread = new Thread(SimulateConveyorBelt);
+        simulationThread.Start();
+
+        while (isRunning)
+        {
+            Thread.Sleep(100);
+        }
+    }
+
+    private void HandleClients()
+    {
         while (isRunning)
         {
             TcpClient client = tcpListener.AcceptTcpClient();
@@ -63,6 +86,61 @@ class ModbusTCPServer
         }
 
         tcpClient.Close();
+    }
+
+    private void HandleDashboardClients()
+    {
+        while (isRunning)
+        {
+            TcpClient dashboardClient = dashboardListener.AcceptTcpClient();
+            dashboardClients.Add(dashboardClient);
+            Console.WriteLine("New dashboard client connected");
+        }
+    }
+
+    private void BroadcastToDashboards()
+    {
+        string data = string.Format("{0},{1},{2},{3}",
+            conveyorRunning,
+            conveyorSpeed,
+            itemCount,
+            emergencyStop);
+        byte[] message = System.Text.Encoding.ASCII.GetBytes(data);
+
+        foreach (var client in dashboardClients)
+        {
+            try
+            {
+                NetworkStream stream = client.GetStream();
+                stream.Write(message, 0, message.Length);
+            }
+            catch
+            {
+                // Remove disconnected clients
+                TcpClient removedClient;
+                dashboardClients.TryTake(out removedClient);
+            }
+        }
+    }
+
+    public void SimulateConveyorBelt()
+    {
+        while (isRunning)
+        {
+            if (conveyorRunning && !emergencyStop)
+            {
+                // Simulate item movement
+                if (random.Next(100) < conveyorSpeed)
+                {
+                    itemCount++;
+                    holdingRegisters[2] = itemCount;
+                    Console.WriteLine("Item passed through. Total count: " + itemCount);
+                }
+            }
+
+            BroadcastToDashboards();
+            Thread.Sleep(100); // Update every 100ms
+        }
     }
 
     private byte[] ProcessModbusRequest(byte[] request, int length)
@@ -183,30 +261,9 @@ class ModbusTCPServer
         return response;
     }
 
-    public void SimulateConveyorBelt()
-    {
-        while (isRunning)
-        {
-            if (conveyorRunning && !emergencyStop)
-            {
-                // Simulate item movement
-                if (random.Next(100) < conveyorSpeed)
-                {
-                    itemCount++;
-                    holdingRegisters[2] = itemCount;
-                    Console.WriteLine("Item passed through. Total count: " + itemCount);
-                }
-            }
-
-            Thread.Sleep(100); // Update every 100ms
-        }
-    }
-
     static void Main(string[] args)
     {
-        ModbusTCPServer server = new ModbusTCPServer(502);
-        Thread simulationThread = new Thread(server.SimulateConveyorBelt);
-        simulationThread.Start();
+        ModbusTCPServer server = new ModbusTCPServer(502, 5001);
         server.Start();
     }
 }

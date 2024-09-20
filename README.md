@@ -1,72 +1,61 @@
-# Industrial Modbus TCP Server and Client Simulation
+# Enhanced Modbus TCP Server and Client with Real-time Dashboard
 
-A C# implementation of a Modbus TCP server and client, simulating an industrial conveyor belt system.
-
-## Description
-
-This project provides a Modbus TCP server that simulates a conveyor belt system and a client that interacts with it. The simulation demonstrates the use of Modbus TCP in an industrial setting, allowing users to control and monitor a virtual conveyor belt system.
+This project provides a simple Modbus TCP server and client implementation in C# for Windows, featuring a real-time WPF dashboard for visualizing data.
 
 ## Features
 
-- Server simulates a conveyor belt system with:
-  - Conveyor status (running/stopped)
-  - Conveyor speed control (0-100%)
-  - Item counter
-  - Emergency stop functionality
-- Client provides a user interface to:
-  - Monitor conveyor status, speed, and item count
-  - Start/stop the conveyor
-  - Adjust conveyor speed
-  - Activate/deactivate emergency stop
-- Uses Modbus TCP for communication
-- Implemented in C# with MSBuild project files
+- Modbus TCP Server simulating a conveyor belt system
+- Modbus TCP Client for interacting with the server
+- Real-time WPF dashboard displaying conveyor belt status and statistics
+- Supports Read Holding Registers (0x03) and Write Single Register (0x06) functions
+- Simulates temperature sensors, item counting, and emergency stop functionality
 
 ## Requirements
 
 - Windows operating system
-- .NET Framework 4.0 or later
-- MSBuild (included in .NET Framework)
-
-## Usage
-
-1. Clone this repository or download the source files.
-2. Open Command Prompt and navigate to the project directory.
-3. Run the `build.bat` file to compile and start both the server and client:
-
-```
-build.bat
-```
-
-This will:
-
-- Compile both the server (ModbusTCPServer.csproj) and client (ModbusTCPClient.csproj) using MSBuild
-- Start the server in a new window
-- Run the client in the current window
-
-The server will simulate the conveyor belt system, and the client will allow you to interact with it.
+- .NET Framework 4.8
+- Visual Studio 2019 or later (for development)
 
 ## Project Structure
 
-- `ModbusTCPServer.cs`: Server implementation (conveyor belt simulation)
-- `ModbusTCPClient.cs`: Client implementation (user interface)
-- `ModbusTCPServer.csproj`: MSBuild project file for the server
-- `ModbusTCPClient.csproj`: MSBuild project file for the client
-- `build.bat`: Batch script to build and run the projects
+- `ModbusTCPServer.cs`: Server implementation
+- `ModbusTCPClient.cs`: Client implementation
+- `ServerDashboard/`: WPF project for the real-time dashboard
+- `build.bat`: Batch script to build and run all components
 
-## Simulation Details
+## Getting Started
 
-The simulation uses the following Modbus registers:
+1. Clone this repository
+2. Ensure .NET Framework 4.8 is installed on your system
+3. Open a command prompt in the project directory
+4. Run `build.bat` to compile and start all components
 
-- Register 0: Conveyor Status (0 = Stopped, 1 = Running)
-- Register 1: Conveyor Speed (0-100%)
-- Register 2: Item Count
-- Register 3: Emergency Stop (0 = Inactive, 1 = Active)
+## Demo
 
-The client allows you to read these registers and write to registers 0, 1, and 3 to control the conveyor belt system.
+![Modbus TCP Demo](images/demo.gif)
+
+The demo GIF shows four windows:
+
+1. **Top Left**: Terminal running `build.bat` and client interaction
+2. **Top Right**: WPF Dashboard showing real-time conveyor belt data
+3. **Bottom Left**: Server terminal output
+
+## Usage
+
+1. Run `build.bat` to start the server, client, and dashboard
+2. Use the client terminal to interact with the simulated conveyor belt system:
+   - Start/stop the conveyor
+   - Adjust conveyor speed
+   - Activate/deactivate emergency stop
+3. Observe real-time updates on the WPF dashboard
 
 ## Customization
 
-You can modify the `.cs` files to add more features to the simulation, implement additional Modbus functions, or change the behavior of the conveyor belt system. If you need to add references or change build settings, you can modify the `.csproj` files.
+You can modify the server, client, or dashboard code to add more features or change the simulation behavior. After making changes, run `build.bat` again to recompile and run the updated system.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
@@ -74,14 +63,4 @@ This project is licensed under the WTFPL (Do What The F\*ck You Want To Public L
 
 ## Disclaimer
 
-This simulation is intended for educational and demonstration purposes. It may not reflect all the complexities and safety considerations of a real industrial system.
-
-## Contributing
-
-Feel free to fork this project and submit pull requests with improvements or bug fixes. Some areas for potential enhancement include:
-
-- Adding more simulated industrial components
-- Implementing additional Modbus functions
-- Improving error handling and logging
-- Enhancing the client's user interface
-- Adding unit tests for the simulation logic
+This implementation is intended for educational and demonstration purposes. It may not be suitable for production environments without further development and security considerations.
