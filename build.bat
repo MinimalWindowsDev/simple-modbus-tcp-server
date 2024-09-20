@@ -25,7 +25,7 @@ if %ERRORLEVEL% NEQ 0 (
 echo Both server and client compiled successfully.
 
 echo Starting ModbusTCPServer...
-start "" build\ModbusTCPServer.exe
+start "Modbus TCP Server" cmd /c build\ModbusTCPServer.exe
 
 echo Waiting for server to initialize...
 timeout /t 5 /nobreak
