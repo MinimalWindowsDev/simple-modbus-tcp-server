@@ -1,37 +1,35 @@
 @echo off
 
-set "PATH=C:\Windows\System32\;C:\Windows\Microsoft.NET\Framework64\v4.0.30319\;"
+set "PATH=C:\Windows\Microsoft.NET\Framework64\v4.0.30319;%PATH%"
 
-if not exist build mkdir build
-
-echo Compiling ModbusTCPServer...
-csc.exe /nologo /out:build\ModbusTCPServer.exe ModbusTCPServer.cs
+echo Building ModbusTCPServer...
+msbuild.exe /nologo /verbosity:quiet ModbusTCPServer.csproj /p:Configuration=Release
 
 if %ERRORLEVEL% NEQ 0 (
-    echo Server compilation failed.
+    echo Server build failed.
     pause
     exit /b 1
 )
 
-echo Compiling ModbusTCPClient...
-csc.exe /nologo /out:build\ModbusTCPClient.exe ModbusTCPClient.cs
+echo Building ModbusTCPClient...
+msbuild.exe /nologo /verbosity:quiet ModbusTCPClient.csproj /p:Configuration=Release
 
 if %ERRORLEVEL% NEQ 0 (
-    echo Client compilation failed.
+    echo Client build failed.
     pause
     exit /b 1
 )
 
-echo Both server and client compiled successfully.
+echo Both server and client built successfully.
 
 echo Starting ModbusTCPServer...
-start "Modbus TCP Server" cmd /c build\ModbusTCPServer.exe
+start "Modbus TCP Server" cmd /c bin\Release\ModbusTCPServer.exe
 
 echo Waiting for server to initialize...
 timeout /t 5 /nobreak
 
 echo Starting ModbusTCPClient...
-build\ModbusTCPClient.exe
+bin\Release\ModbusTCPClient.exe
 
 echo Client execution finished. Server is still running in the background.
 echo Press any key to exit...

@@ -379,3 +379,5 @@ FodyWeavers.xsd
 *.sln.iml
 
 build/
+bin/
+obj/
